@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html>
   <script>
-    fetch('https://bootcamp.fjord.jp')
-    .then(response => response.text())
-    .then(text => console.log(text))
+    async function fetchFjord() {
+      const result = await fetch('https://bootcamp.fjord.jp')
+      const text = await result.text()
+      console.log(text)
+    }
+    fetchFjord()
   </script>
   <body>
     fetchAPIを実行します
