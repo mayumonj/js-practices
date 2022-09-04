@@ -1,35 +1,26 @@
 import * as readline from 'node:readline'
-import sqlite3 from 'sqlite3'
 import { Command } from 'commander'
 import inquirer from 'inquirer'
+import { Memo } from './Memo.js'
 
-class Memo {
-  constructor (id, title, body) {
-    this.id = id
-    this.title = title
-    this.body = body
+main()
+
+function main () {
+  const option = getOption()
+
+  switch (option) {
+    case 'l':
+      showMemoList()
+      return
+    case 'r':
+      showMemoDetail()
+      return
+    case 'd':
+      deleteMemo()
+      return
+    case 'no-option':
+      writeNewMemo()
   }
-}
-
-const db = new sqlite3.Database('db_memos')
-
-const option = getOption()
-
-switch (option) {
-  case 'l':
-    showMemosList()
-    break
-
-  case 'r':
-    showMemoDetail()
-    break
-
-  case 'd':
-    deleteMemo()
-    break
-
-  case null:
-    writeNewMemo()
 }
 
 function getOption () {
@@ -42,38 +33,23 @@ function getOption () {
 
   program.parse()
 
-  const count = Object.values(program.opts()).reduce(
-    (count, currentValue) =>
-      count + (currentValue === true ? 1 : 0)
-    , 0
-  )
-
-  if (count > 1) {
-    console.log('オプションが不正です')
+  const numberOfOptions = Object.keys(program.opts()).length
+  if (numberOfOptions > 1) {
+    console.log('オプションは1つだけ指定してください')
     return
   }
-
-  let option = null
-  if (program.opts().l === true) { option = 'l' }
-  if (program.opts().r === true) { option = 'r' }
-  if (program.opts().d === true) { option = 'd' }
-  return option
+  return Object.keys(program.opts())[0] || 'no-option'
 }
 
-function showMemosList () {
-  db.all('select * from memos', (err, rows) => {
-    if (err) {
-      console.log(err)
-      return
-    }
-    rows.forEach(currentValue => {
-      console.log(currentValue.title)
-    })
+async function showMemoList () {
+  const memos = await Memo.getAllMemos()
+  memos.forEach(currentValue => {
+    console.log(currentValue.title)
   })
 }
 
 async function showMemoDetail () {
-  const memos = await getAllMemos()
+  const memos = await Memo.getAllMemos()
   const questions = [
     {
       type: 'list',
@@ -92,7 +68,7 @@ async function showMemoDetail () {
 }
 
 async function deleteMemo () {
-  const memos = await getAllMemos()
+  const memos = await Memo.getAllMemos()
   const questions = [
     {
       type: 'list',
@@ -105,8 +81,8 @@ async function deleteMemo () {
   ]
   inquirer.prompt(questions).then((answer) => {
     const targetMemo = memos.find(memo => memo.id === answer.targetMemoID)
-    db.run('delete from memos where id = ?', answer.targetMemoID)
-    console.log(`タイトル:${targetMemo.title} を削除しました`)
+    const memo = new Memo(...Object.values(targetMemo))
+    memo.delete()
   })
 }
 
@@ -124,28 +100,6 @@ function writeNewMemo () {
 
   reader.on('close', () => {
     const memo = new Memo(null, lines[0], lines.slice(1).join('\n'))
-    db.serialize(() => {
-      db.run('create table if not exists memos(id INTEGER PRIMARY KEY,title TEXT NOT NULL, body TEXT)')
-      db.run('insert into memos(title, body) values(?,?)', memo.title, memo.body, function (err) {
-        if (err) {
-          console.log(err)
-          return
-        }
-        console.log(`メモが作成されました: id ${this.lastID}`)
-      })
-    })
+    memo.save()
   })
-}
-
-async function getAllMemos () {
-  const memos = await new Promise(resolve => {
-    db.all('select * from memos', (err, rows) => {
-      if (err) {
-        console.log(err)
-        return
-      }
-      resolve(rows)
-    })
-  })
-  return memos
 }
