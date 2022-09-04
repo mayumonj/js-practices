@@ -1,16 +1,6 @@
-import { eachDayOfInterval, endOfMonth } from 'date-fns'
+import { eachDayOfInterval, endOfMonth, isSaturday } from 'date-fns'
 import { utcToZonedTime } from 'date-fns-tz/esm'
 import { Command } from 'commander'
-
-const DAYS = {
-  Sunday: 0,
-  Monday: 1,
-  Tuesday: 2,
-  Wednesay: 3,
-  Thusrsday: 4,
-  Friday: 5,
-  Saturday: 6
-}
 
 const [year, month] = getYearAndMonth()
 validateYearAndMonth(year, month)
@@ -27,7 +17,7 @@ for (let i = 0; i < startDate.getDay(); i++) {
 
 eachDayOfInterval({ start: startDate, end: endDate }).forEach(date => {
   process.stdout.write(date.getDate().toString().padStart(2))
-  date.getDay() === DAYS.Saturday ? process.stdout.write('\n') : process.stdout.write(' ')
+  isSaturday(date) ? process.stdout.write('\n') : process.stdout.write(' ')
 })
 
 function getYearAndMonth () {
@@ -52,11 +42,6 @@ function validateYearAndMonth (year, month) {
     if (isInvalidYear(year)) {
       throw new Error(`year ${year} not in range 1..9999`)
     }
-  } catch (e) {
-    console.log(e.message)
-    process.exit(1)
-  }
-  try {
     if (isInValidMonth(month)) {
       throw new Error(`${month} is neither a month number (1..12) nor a name`)
     }
@@ -67,13 +52,9 @@ function validateYearAndMonth (year, month) {
 }
 
 function isInvalidYear (year) {
-  if ((year < 1 || year > 9999) || !Number.isInteger(year)) {
-    return true
-  }
+  return ((year < 1 || year > 9999) || !Number.isInteger(year))
 }
 
 function isInValidMonth (month) {
-  if ((month < 1 || month > 12) || !Number.isInteger(month)) {
-    return true
-  }
+  return ((month < 1 || month > 12) || !Number.isInteger(month))
 }
