@@ -1,9 +1,18 @@
 import * as readline from 'node:readline'
 import sqlite3 from 'sqlite3'
 import { Command } from 'commander'
+import inquirer from 'inquirer'
+// import { resolve } from 'node:path'
+
+class Memo {
+  constructor (id, title, body) {
+    this.id = id
+    this.title = title
+    this.body = body
+  }
+}
 
 const db = new sqlite3.Database('db_memos')
-process.stdin.setEncoding('utf8')
 
 const option = getOption()
 
@@ -22,14 +31,6 @@ switch (option) {
 
   case null:
     writeNewMemo()
-}
-
-class Memo {
-  constructor (id, title, body) {
-    this.id = id
-    this.title = title
-    this.body = body
-  }
 }
 
 function getOption () {
@@ -60,7 +61,40 @@ function getOption () {
   return option
 }
 
+function showMemosList () {
+  db.all('select rowid, * from memos', (err, rows) => {
+    if (err) { return console.log(err) }
+    rows.forEach(currentValue => {
+      console.log(currentValue.title)
+    })
+  })
+}
+
+async function showMemoDetail () {
+  const memos = await getAllMemos()
+  const questions = [
+    {
+      type: 'list',
+      name: 'targetMemoID',
+      message: 'Choose a note you want to see:',
+      choices: memos.map(memo => {
+        return { name: memo.title, value: memo.id }
+      })
+    }
+  ]
+  inquirer.prompt(questions).then((answer) => {
+    const targetMemo = memos.find(memo => memo.id === answer.targetMemoID)
+    console.log(targetMemo.title)
+    console.log(targetMemo.body)
+  })
+}
+
+function deleteMemo () {
+  // TODO:
+}
+
 function writeNewMemo () {
+  process.stdin.setEncoding('utf8')
   const lines = []
   const reader = readline.createInterface({
     input: process.stdin,
@@ -84,19 +118,12 @@ function writeNewMemo () {
   })
 }
 
-function showMemosList () {
-  db.all('select rowid, * from memos', (err, rows) => {
-    if (err) { return console.log(err) }
-    rows.forEach(currentValue => {
-      console.log(currentValue.title)
+async function getAllMemos () {
+  const memos = await new Promise(resolve => {
+    db.all('select rowid, * from memos', (err, rows) => {
+      if (err) { return console.log(err) }
+      resolve(rows)
     })
   })
-}
-
-function showMemoDetail () {
-  // TODO:
-}
-
-function deleteMemo () {
-  // TODO:
+  return memos
 }

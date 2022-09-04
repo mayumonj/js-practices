@@ -9,6 +9,7 @@
   "type": "module",
   "dependencies": {
     "commander": "^9.4.0",
+    "inquirer": "^9.1.1",
     "sqlite3": "^5.0.11"
   }
 }
