@@ -2,7 +2,6 @@ import * as readline from 'node:readline'
 import sqlite3 from 'sqlite3'
 import { Command } from 'commander'
 import inquirer from 'inquirer'
-// import { resolve } from 'node:path'
 
 class Memo {
   constructor (id, title, body) {
@@ -37,9 +36,9 @@ function getOption () {
   const program = new Command()
 
   program
-    .option('-l')
-    .option('-r')
-    .option('-d')
+    .option('-l', 'メモのリストを表示します')
+    .option('-r', 'メモを選択して内容を表示します')
+    .option('-d', 'メモを選択して削除します')
 
   program.parse()
 
@@ -62,8 +61,11 @@ function getOption () {
 }
 
 function showMemosList () {
-  db.all('select rowid, * from memos', (err, rows) => {
-    if (err) { return console.log(err) }
+  db.all('select * from memos', (err, rows) => {
+    if (err) {
+      console.log(err)
+      return
+    }
     rows.forEach(currentValue => {
       console.log(currentValue.title)
     })
@@ -76,7 +78,7 @@ async function showMemoDetail () {
     {
       type: 'list',
       name: 'targetMemoID',
-      message: 'Choose a note you want to see:',
+      message: '表示したいメモを選んでください:',
       choices: memos.map(memo => {
         return { name: memo.title, value: memo.id }
       })
@@ -89,8 +91,23 @@ async function showMemoDetail () {
   })
 }
 
-function deleteMemo () {
-  // TODO:
+async function deleteMemo () {
+  const memos = await getAllMemos()
+  const questions = [
+    {
+      type: 'list',
+      name: 'targetMemoID',
+      message: '削除したいメモを選んでください:',
+      choices: memos.map(memo => {
+        return { name: memo.title, value: memo.id }
+      })
+    }
+  ]
+  inquirer.prompt(questions).then((answer) => {
+    const targetMemo = memos.find(memo => memo.id === answer.targetMemoID)
+    db.run('delete from memos where id = ?', answer.targetMemoID)
+    console.log(`タイトル:${targetMemo.title} を削除しました`)
+  })
 }
 
 function writeNewMemo () {
@@ -107,11 +124,13 @@ function writeNewMemo () {
 
   reader.on('close', () => {
     const memo = new Memo(null, lines[0], lines.slice(1).join('\n'))
-    console.log(lines)
     db.serialize(() => {
       db.run('create table if not exists memos(id INTEGER PRIMARY KEY,title TEXT NOT NULL, body TEXT)')
       db.run('insert into memos(title, body) values(?,?)', memo.title, memo.body, function (err) {
-        if (err) { return console.log(err) }
+        if (err) {
+          console.log(err)
+          return
+        }
         console.log(`メモが作成されました: id ${this.lastID}`)
       })
     })
@@ -120,8 +139,11 @@ function writeNewMemo () {
 
 async function getAllMemos () {
   const memos = await new Promise(resolve => {
-    db.all('select rowid, * from memos', (err, rows) => {
-      if (err) { return console.log(err) }
+    db.all('select * from memos', (err, rows) => {
+      if (err) {
+        console.log(err)
+        return
+      }
       resolve(rows)
     })
   })

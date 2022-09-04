@@ -22,8 +22,9 @@ db.serialize(() => {
   db.run('insert into memos(title, body) values(?,?)', memo2.title, memo2.body)
   db.run('insert into memos(title, body) values(?,?)', memo3.title, memo3.body)
   db.run('insert into memos(title, body) values(?,?)', memo4.title, memo4.body)
-  db.all('select * from memos', (rows) => {
+  db.all('select * from memos', (err, rows) => {
     console.log(rows)
+    if (err) { console.log(err) }
   })
 })
 
