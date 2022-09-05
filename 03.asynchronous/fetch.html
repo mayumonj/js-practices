@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <script>
+    async function fetchFjord() {
+      const result = await fetch('https://bootcamp.fjord.jp')
+      const text = await result.text()
+      console.log(text)
+    }
+    fetchFjord()
+  </script>
+  <body>
+    fetchAPIを実行します
+  </body>
+</html>
+
+
