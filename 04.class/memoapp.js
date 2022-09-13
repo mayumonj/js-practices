@@ -60,11 +60,10 @@ async function showMemoDetail () {
       })
     }
   ]
-  inquirer.prompt(questions).then((answer) => {
-    const targetMemo = memos.find(memo => memo.id === answer.targetMemoID)
-    console.log(targetMemo.title)
-    console.log(targetMemo.body)
-  })
+  const answer = await inquirer.prompt(questions)
+  const targetMemo = memos.find(memo => memo.id === answer.targetMemoID)
+  console.log(targetMemo.title)
+  console.log(targetMemo.body)
 }
 
 async function deleteMemo () {
@@ -79,11 +78,10 @@ async function deleteMemo () {
       })
     }
   ]
-  inquirer.prompt(questions).then((answer) => {
-    const targetMemo = memos.find(memo => memo.id === answer.targetMemoID)
-    const memo = new Memo(...Object.values(targetMemo))
-    memo.delete()
-  })
+  const answer = await inquirer.prompt(questions)
+  const targetMemo = memos.find(memo => memo.id === answer.targetMemoID)
+  const memo = new Memo(...Object.values(targetMemo))
+  memo.delete()
 }
 
 function writeNewMemo () {
