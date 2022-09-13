@@ -8,11 +8,11 @@ export class Memo {
   static DB = new sqlite3.Database(DB_NAME)
 
   static async getAllMemos () {
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.DB.all(`select * from ${TABLE_NAME}`, (err, rows) => {
         if (err) {
           console.log(err)
-          return
+          reject(err)
         }
         resolve(rows)
       })
