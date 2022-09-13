@@ -80,7 +80,7 @@ async function deleteMemo () {
   ]
   const answer = await inquirer.prompt(questions)
   const targetMemo = memos.find(memo => memo.id === answer.targetMemoID)
-  const memo = new Memo(...Object.values(targetMemo))
+  const memo = new Memo(targetMemo.id, targetMemo.title, targetMemo.body)
   memo.delete()
 }
 
